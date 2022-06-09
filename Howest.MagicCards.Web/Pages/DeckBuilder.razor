@@ -1,0 +1,155 @@
+﻿@page "/"
+@page "/builder"
+@using Howest.MagicCards.Shared
+@using Syncfusion.Blazor.DropDowns
+
+<PageTitle>Build your deck!</PageTitle>
+
+<h1>Build your deck!</h1>
+
+
+<section class="cards">
+    <section id="cards-section">
+        <div id="cards-form">
+            <div>
+                <input type="text" id="card-name" placeholder="Card name" @bind="CardNameFilter"/>
+                <input type="text" id="card-text" placeholder="Card text" @bind="CardTextFilter"/>
+                <select id="card-set" @bind="CardSetFilter">
+                    @if(Sets != null)
+                    {
+                        <option value="">No filter</option>
+                        @foreach(var Set in Sets)
+                        {
+                            <option value="@Set.Code">@Set.Name</option>
+                        }
+                    }
+                </select>
+             </div>
+             <div>
+                <select @bind="CardArtistFilter">
+                    @if(artists != null)
+                    {
+                        <option value="0">No filter</option>
+                        @foreach(var Artist in artists)
+                        {
+                            <option value="@Artist.Id">@Artist.Name</option>
+                        }
+                    }
+                </select>
+
+                <select id="card-order" @bind="CardOrderFilter">
+                    <option value="asc">ASC</option>
+                    <option value="desc">DESC</option>
+                </select>
+                <select id="card-rarity" @bind="CardRarityFilter">
+                    <option value="">No filter</option>
+                    <option value="U">Uncommon</option>
+                    <option value="C">Common</option>
+                    <option value="R">Rare</option>
+                    <option value="M">Mythic</option>
+                    <option value="S">Special</option>
+                    <option value="B">Bonus</option>
+                </select>
+            </div>
+            <div>
+                <button @onclick="ShowPreviousPage" id="prev-page">Previous page</button>
+                <button @onclick="ShowNextPage"id="prev-page">Next page</button>
+                <button @onclick="LoadCards">Search</button>
+            </div>
+        </div>
+        <div id="cards-available">
+            @if(Cards == null){
+                <p>Loading</p>
+            }
+            else{
+            @foreach(var card in Cards)
+                {
+                    <img src="@card.ImageUrl" @onclick="() => AddCardToDeck(card)"/>
+                }
+            }
+        </div>
+    </section>
+    <section id="cards-selected-section">
+
+        <div>
+            <div id="deck-option-picker" @onclick="ResetUserMessage">
+                <p>I want to:</p>
+                <select @bind="deckoptions">
+                    <option value="load">Load a deck</option>
+                    <option value="save">Save a deck</option>
+                    <option value="delete">Delete a deck</option>
+                </select>
+                <button @onclick="ClearDeck">Clear deck</button>
+            </div>
+            <div>
+                @if(deckoptions == "load")
+                {
+                    <div class="options">
+                        <input type="number" placeholder="Deck number" min="0" @bind="DeckNumber">
+                        <input type="password" placeholder="Deck password (optional)" @bind="DeckPassword">
+                        <button @onclick="LoadDeckFromApi">Load deck</button>
+                        <p>or</p>
+                        <button @onclick="LoadDeckLocal" id="loadlocalbutton">Load deck from local storage</button>
+                        @if(UserMessage != "")
+                        {
+                            <p>@UserMessage</p>
+                        }
+                    </div>
+                }
+                @if(deckoptions == "save")
+                {
+                    <div class="options">
+                        <input type="password" placeholder="Deck password (optional)" @bind="SaveDeckPassword" id="savpw">
+                        <button @onclick="SaveDeckToApi">Save deck</button>
+                        @if(UserMessage != "")
+                        {
+                            <p>@UserMessage</p>
+                        }
+                    </div>
+                }
+                @if(deckoptions == "delete")
+                {
+                    <div class="options">
+                        <input type="number" placeholder="Deck number" min="0" @bind="DeckNumber">
+                        <input type="password" placeholder="Deck password (optional)" @bind="DeckPassword">
+                        <button @onclick="DeleteDeckFromApi">Delete deck</button>
+                        @if(UserMessage != "")
+                        {
+                            <p>@UserMessage</p>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        
+        <div><p id="info-card-selected">Count | Name | Converted Mana Cost | Type</p></div>
+        <div>
+            @foreach(var card in SelectCards.Keys)
+            {
+                <div class="selectedcard">
+                    <p>@SelectCards[card] | @card.Name | @card.ConvertedManaCost | @card.Type</p>
+                    <div>
+                        <button @onclick="()=>removeCardFromDeck(card)">Remove</button>
+                        <button @onclick="()=>openPopup(card)">Info</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+</section>
+
+@if(currentselectedcard != null)
+{
+    <div id="popup-card-info">
+        <h1>@currentselectedcard.Name</h1>
+        <h2>Converted Mana Cost: @currentselectedcard.ConvertedManaCost</h2>
+        <h2>Rarity: @currentselectedcard.Rarity.Name</h2>
+        <h2>Mana Cost: @currentselectedcard.ManaCost</h2>
+        <h2>Type: @currentselectedcard.Type</h2>
+        <h2>Text: @currentselectedcard.Text</h2>
+        <h2>Set: @currentselectedcard.Set.Name</h2>
+        <h2>Artist: @currentselectedcard.Artist.Name</h2>
+        <button @onclick="() => closePopup()">Close</button>
+    </div>
+}
